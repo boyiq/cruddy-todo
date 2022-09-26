@@ -38,9 +38,36 @@ const writeCounter = (count, callback) => {
 
 // Public API - Fix this function //////////////////////////////////////////////
 
-exports.getNextUniqueId = () => {
-  counter = counter + 1;
-  return zeroPaddedNumber(counter);
+exports.getNextUniqueId = (callback) => {
+
+  //read the curr number in counter.txt
+  readCounter(function(err, counter) {
+    if (err) {
+      console.log(err);
+    } else {
+      var newCount = counter + 1;
+      writeCounter(newCount, function(err) {
+        if (err) {
+          console.log(err);
+        } else {
+          callback(null, zeroPaddedNumber(counter + 1));
+        }
+      });
+    }
+  });
+
+  //increment the number
+
+
+  //write number to new file
+
+
+
+
+  // writeCounter(readCounter((input)=>(input + 1)), console.log);
+
+  // return readCounter((currentCount)=>(currentCount));
+
 };
 
 
