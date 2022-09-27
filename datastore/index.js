@@ -162,7 +162,7 @@ exports.delete = (id, callback) => {
             if (err) {
               console.log(err);
             } else {
-              console.log(`file directory after deletion ------->`, )
+              callback(null);
               console.log('Successfully deleted')
             }
           })
