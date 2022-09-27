@@ -84,32 +84,37 @@ exports.readOne = (id, callback) => {
     if (err) {
       console.log(err);
     } else {
-      console.log('data-------->', data);
+    //
+    //   console.log('data-------->', data);
       let idExist = false;
       for (let i = 0; i < data.length; i++) {
         if (path.parse(data[i]).name === id) {
           console.log('id is, ', id, 'the found file is', data[i]);
           idExist = true;
-          fs.readFile(path.join(exports.dataDir, data[i]), (err, fileData)=> {
+          console.log('path=====>', path.join(exports.dataDir, data[i]))
+          fs.readFile(path.join(exports.dataDir, data[i]), "utf8", (err, fileData)=> {
             if (err) {
               console.log(err);
             } else {
-              callback(null, fileData);
-
+              console.log('filedata---->', fileData);
+              let id = path.parse(data[i]).name;
+              let text = fileData;
+              callback(null, {id, text});
             }
           });
           return;
         }
-        if (!idExist) {
-          callback(err, id);
-        }
+      }
+      if (!idExist) {
+        console.log('------error handler');
+        callback(new Error(`No item with id: ${id}`));
       }
     }
   });
 
   // var text = items[id];
   // if (!text) {
-  //   callback(new Error(`No item with id: ${id}`));
+  //   callback();
   // } else {
   //   callback(null, { id, text });
   // }
