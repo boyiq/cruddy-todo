@@ -45,72 +45,37 @@ const writeCounter = (count, callback) => {
 };
 
 // Public API - Fix this function //////////////////////////////////////////////
-// with bluebird
-exports.getNextUniqueId = () => {
 
-  //look and see if counter.txt exists
-  readDir('./datastore')
-    .then(function(data) {
-      if (data.includes('counter.txt')) {
-        data.forEach((file, index) => {
-          if (file === 'counter.txt') {
-            readFile(`./datastore/${file}`)
-              .then(function(data) {
-                const newId = Number(data) + 1;
-                writeFile(`./datastore/${file}`, newId.toString())
-                  .then(function(data) {
-                    console.log('count file updated');
-                  });
-              });
-          }
-        });
-      } else {
-        writeFile('./datastore/counter.txt', (1).toString())
-          .then(function(data) {
-            console.log('new counter.txt file written');
-          });
-      }
-    });
-  //if not make one
-  //if yes, increment one
-  //readFile
-  //increment num
-  //writefile with new num
+exports.getNextUniqueId = (callback) => {
 
-  // exports.getNextUniqueId = () => {
-  //   //check to see if counter.txt exists
-  //   const dirPath = './datastore';
-  //   fs.readdir(dirPath, (err, data) => {
-  //     if (err) {
-  //       console.log(err);
-  //     }
-  //     data.forEach((file, index) => {
-  //       if (file === 'counter.txt') {
-  //         fs.readFile(`${dirPath}/counter.txt`, (err, data) => {
-  //           if (err) {
-  //             console.log(err);
-  //           }
-  //           const newId = Number(data) + 1;
-  //           fs.writeFile(`${dirPath}/counter.txt`, newId.toString(), (err) => {
-  //             if (err) {
-  //               console.log(err);
-  //             }
-  //             console.log('File saved');
-  //           });
-  //         });
-  //       } else {
-  //         fs.writeFile(`${dirPath}/counter.txt`, (1).toString(), (err) =>{
-  //           if (err) {
-  //             console.log(err);
-  //           }
-  //         });
-  //       }
-  //     });
-  //   });
+  //read the curr number in counter.txt
+  readCounter(function(err, counter) {
+    if (err) {
+      console.log(err);
+    } else {
+      var newCount = counter + 1;
+      writeCounter(newCount, function(err) {
+        if (err) {
+          console.log(err);
+        } else {
+          callback(null, zeroPaddedNumber(counter + 1));
+        }
+      });
+    }
+  });
+
+  //increment the number
 
 
-  counter = counter + 1;
-  return zeroPaddedNumber(counter);
+  //write number to new file
+
+
+
+
+  // writeCounter(readCounter((input)=>(input + 1)), console.log);
+
+  // return readCounter((currentCount)=>(currentCount));
+
 };
 
 
