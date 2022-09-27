@@ -96,7 +96,6 @@ exports.readOne = (id, callback) => {
             if (err) {
               console.log(err);
             } else {
-              console.log('filedata---->', fileData);
               let id = path.parse(data[i]).name;
               let text = fileData;
               callback(null, {id, text});
@@ -111,34 +110,83 @@ exports.readOne = (id, callback) => {
       }
     }
   });
-
-  // var text = items[id];
-  // if (!text) {
-  //   callback();
-  // } else {
-  //   callback(null, { id, text });
-  // }
 };
 
 exports.update = (id, text, callback) => {
-  var item = items[id];
-  if (!item) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    items[id] = text;
-    callback(null, { id, text });
-  }
+  //look for file based on id
+  let currDir = exports.dataDir;
+  fs.readdir(currDir, (err, data) => {
+    if (err) {
+      console.log(err);
+    } else {
+      let idExist = false;
+      data.forEach((file) => {
+        const currFileName = path.parse(file).name;
+        if (currFileName === id) {
+          idExist = true;
+          let destination = path.join(currDir, file);
+          fs.writeFile(destination, text, (err) => {
+            if (err) {
+              console.log(err);
+            } else {
+              let id = path.parse(file).name;
+              let newText = text;
+              callback(null, {id, newText});
+            }
+          })
+        }
+      });
+      if (!idExist) {
+        console.log('------error handler');
+        callback(new Error(`No item with id: ${id}`));
+      }
+    }
+  })
 };
 
 exports.delete = (id, callback) => {
-  var item = items[id];
-  delete items[id];
-  if (!item) {
-    // report an error if item not found
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback();
-  }
+  //get to the id files directory, look for the file with id
+  let source= exports.dataDir;
+  fs.readdir(source, (err,data)=> {
+    if (err) {
+      console.log(err);
+    } else {
+      let idExist = false;
+      console.log(`initial file directory list ----->`, data);
+      data.forEach((file) => {
+        let fileName = path.parse(file).name;
+        if (fileName === id) {
+          idExist = true;
+          let filePath = path.join(source, file);
+          fs.rm(filePath, (err) => {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log(`file directory after deletion ------->`, )
+              console.log('Successfully deleted')
+            }
+          })
+        }
+      });
+      if (!idExist) {
+        callback(new Error(`No item with id: ${id}`));
+      }
+    }
+  })
+  //if found, fs.rm()
+  //if not found, send error saying it's not found
+
+
+
+//fs.rm(path[, options], callback)
+  //var item = items[id];
+  //delete items[id];
+  //if (!item) {
+  //  // report an error if item not found
+  //  callback(new Error(`No item with id: ${id}`));
+  //} else {
+  //  callback();
+  //}
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
