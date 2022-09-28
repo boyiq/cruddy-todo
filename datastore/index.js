@@ -1,4 +1,3 @@
-
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
@@ -8,7 +7,8 @@ const fs = require('fs'),
   readFile = Promise.promisify(fs.readFile),
   readDir = Promise.promisify(fs.readdir),
   writeFile = Promise.promisify(fs.writeFile),
-  fileExists = Promise.promisify(fs.exists);
+  fileExists = Promise.promisify(fs.exists),
+  remove = Promise.promisify(fs.rm);
 
 //promisify format: from http://bluebirdjs.com/docs/working-with-callbacks.html#working-with-callback-apis-using-the-node-convention
 // callback: fs.readfile("name", "utf-8"), function(err, data) {
@@ -30,6 +30,7 @@ var items = {};
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
+
   counter.getNextUniqueId((err, id) => {
     let destination = path.join(exports.dataDir, id + '.txt');
     console.log(destination);
@@ -51,29 +52,97 @@ exports.create = (text, callback) => {
 
 exports.readAll = (callback) => {
   let source = exports.dataDir;
-  //read directory
-  //get todo files
-  //
-  fs.readdir(source, (err, data) => {
-    if (err) {
-      console.log(err);
-    }
-    //console.log('data ---->', data);
-    let responseData = data.map((item) => {
-      //get rid of extension in each id// get the file name without the extensions
-      let id = path.parse(item).name;
-      let text = id;
-      console.log(id, text);
-      return {id, text};
-    });
-    callback(null, responseData);
-  });
 
-  // var data = _.map(items, (text, id) => {
-  //   return { id, text };
-  // });
+  readDir(source)
+    .then(function(data) {
+     let result =  data.map((file) => {
 
-};
+        let currFile = path.join(source, file);
+
+       return readFile(currFile, "utf8")
+
+          .then(function(data) {
+           let id = path.parse(currFile).name;
+           let text = data;
+            return {id, text}
+          })
+      })
+      console.log('result------>', result);
+      return Promise.all(result)
+    }).then(function(data) {
+      console.log('data-----', data)
+      callback(null, data);
+    })
+  };
+//
+//Promise.all([promise1, promise2, promise3]).then((values) => {
+//  console.log(values);
+//});
+//   //array of objects
+//   readDir(source)
+//     .then(function(data) {
+//       //iterate files
+//       console.log('data------>', data)
+//       let result = [];
+//       for (file of data) {
+//         let currFile = path.join(source, file);
+//         readFile(currFile, "utf8")
+//           .then(function(data) {
+//             console.log('current file---->', data);
+//             l
+//             let text = data;
+//             result.push({id, text});
+//             console.log('result ---> ', result)
+//           }).catch(err =>{
+//             console.log(err)
+//           });
+//       }
+//       Promise.all(result).then((promises) => {
+//         console.log('promises ----> ', promises);
+//       })
+//       // resolve(result);
+//       console.log('result inside promise---->', result)
+//     });
+// //   }).then((result)=> {
+// //     callback(null, result);
+// // });
+
+// }
+
+
+// exports.readAll = (callback) => {
+//   let source = exports.dataDir;
+//   //read directory
+//   //get todo files
+//   //
+//   fs.readdir(source, (err, data) => {
+//     if (err) {
+//       console.log(err);
+//     }
+//     //console.log('data ---->', data);
+//     let responseData = data.map((item) => {
+//       //get rid of extension in each id// get the file name without the extensions
+//       let id = path.parse(item).name;
+//       fs.readFile(path.join(source, item), "utf8", (err, fileData)=> {
+//         if (err) {
+//           console.log(err);
+//         } else {
+//           var text = fileData;
+//         }
+//       })
+//       return {id, text};
+//       //let text = id;
+//       //console.log(id, text);
+//       //return {id, text};
+//     });
+//     callback(null, responseData);
+//   });
+
+//   // var data = _.map(items, (text, id) => {
+//   //   return { id, text };
+//   // });
+
+// };
 
 exports.readOne = (id, callback) => {
   //find dir by id
@@ -89,9 +158,7 @@ exports.readOne = (id, callback) => {
       let idExist = false;
       for (let i = 0; i < data.length; i++) {
         if (path.parse(data[i]).name === id) {
-          console.log('id is, ', id, 'the found file is', data[i]);
           idExist = true;
-          console.log('path=====>', path.join(exports.dataDir, data[i]))
           fs.readFile(path.join(exports.dataDir, data[i]), "utf8", (err, fileData)=> {
             if (err) {
               console.log(err);
@@ -105,7 +172,7 @@ exports.readOne = (id, callback) => {
         }
       }
       if (!idExist) {
-        console.log('------error handler');
+
         callback(new Error(`No item with id: ${id}`));
       }
     }
@@ -137,7 +204,6 @@ exports.update = (id, text, callback) => {
         }
       });
       if (!idExist) {
-        console.log('------error handler');
         callback(new Error(`No item with id: ${id}`));
       }
     }
@@ -152,7 +218,6 @@ exports.delete = (id, callback) => {
       console.log(err);
     } else {
       let idExist = false;
-      console.log(`initial file directory list ----->`, data);
       data.forEach((file) => {
         let fileName = path.parse(file).name;
         if (fileName === id) {
@@ -173,20 +238,6 @@ exports.delete = (id, callback) => {
       }
     }
   })
-  //if found, fs.rm()
-  //if not found, send error saying it's not found
-
-
-
-//fs.rm(path[, options], callback)
-  //var item = items[id];
-  //delete items[id];
-  //if (!item) {
-  //  // report an error if item not found
-  //  callback(new Error(`No item with id: ${id}`));
-  //} else {
-  //  callback();
-  //}
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
